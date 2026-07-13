@@ -14,7 +14,7 @@ import { CATEGORICAL_PALETTE_LIGHT } from "@/lib/palette";
 
 export type DailySpend = { day: string; total: number };
 
-export function DailySpendChart({ data }: { data: DailySpend[] }) {
+export function DailySpendChart({ data, sym }: { data: DailySpend[]; sym: string }) {
   if (data.every((d) => d.total === 0)) {
     return (
       <p className="py-8 text-center text-sm text-neutral-400">
@@ -41,7 +41,7 @@ export function DailySpendChart({ data }: { data: DailySpend[] }) {
           width={40}
         />
         <Tooltip
-          formatter={(value) => Number(value).toFixed(2)}
+          formatter={(value) => `${sym} ${Number(value).toFixed(2)}`}
           contentStyle={{ borderRadius: 8, borderColor: CHART_INK.gridline }}
         />
         <Bar

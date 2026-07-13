@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useActionState } from "react";
 import { saveMonthlyBudget } from "@/app/actions/budgets";
 import type { MonthlyBudget } from "@/lib/types";
+import { type CurrencyCode, currencySymbol } from "@/lib/currency";
 
 function derivePercentage(budget: MonthlyBudget | null): string {
   if (!budget || !budget.income_amount) return "";
@@ -15,9 +16,11 @@ function derivePercentage(budget: MonthlyBudget | null): string {
 export function BudgetForm({
   month,
   budget,
+  currency,
 }: {
   month: string;
   budget: MonthlyBudget | null;
+  currency: CurrencyCode;
 }) {
   const [result, formAction, isPending] = useActionState(
     saveMonthlyBudget,
@@ -80,7 +83,8 @@ export function BudgetForm({
           />
           {income > 0 && pct > 0 && (
             <p className="mt-1 text-xs text-neutral-500">
-              {pct}% of {income.toFixed(2)} = {derivedSavings.toFixed(2)}
+              {pct}% of {currencySymbol(currency)} {income.toFixed(2)} ={" "}
+              {currencySymbol(currency)} {derivedSavings.toFixed(2)}
             </p>
           )}
         </div>

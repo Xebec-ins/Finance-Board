@@ -2,6 +2,8 @@ import Link from "next/link";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
 import { currentMonthKey, formatMonthLabel } from "@/lib/month";
+import { getUserCurrency } from "@/lib/user-prefs";
+import { currencySymbol, type CurrencyCode } from "@/lib/currency";
 import type { MonthlyBudget, TransactionWithCategory } from "@/lib/types";
 
 export default async function DashboardPage() {
@@ -10,7 +12,7 @@ export default async function DashboardPage() {
   const rangeStart = format(startOfMonth(new Date(month)), "yyyy-MM-dd");
   const rangeEnd = format(endOfMonth(new Date(month)), "yyyy-MM-dd");
 
-  const [{ data: budget }, { data: transactions }] = await Promise.all([
+  const [{ data: budget }, { data: transactions }, currency] = await Promise.all([
     supabase
       .from("monthly_budgets")
       .select("*")
@@ -23,8 +25,10 @@ export default async function DashboardPage() {
       .lte("date", rangeEnd)
       .order("date", { ascending: false })
       .returns<TransactionWithCategory[]>(),
+    getUserCurrency(),
   ]);
 
+  const sym = currencySymbol(currency);
   const spendingBudget = budget?.income_amount ?? 0;
   const savingsGoal = budget?.savings_goal_amount ?? 0;
   const spent = (transactions ?? []).reduce((sum, t) => sum + t.amount, 0);
@@ -75,16 +79,16 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <SummaryCard label="Budget" value={spendingBudget} />
-        <SummaryCard label="Spent" value={spent} accent={spent > spendingBudget ? "text-red-600" : undefined} />
-        <SummaryCard label="Remaining" value={remaining} accent={remaining < 0 ? "text-red-600" : "text-emerald-600"} />
+        <SummaryCard label="Budget" value={spendingBudget} sym={sym} />
+        <SummaryCard label="Spent" value={spent} sym={sym} accent={spent > spendingBudget ? "text-red-600" : undefined} />
+        <SummaryCard label="Remaining" value={remaining} sym={sym} accent={remaining < 0 ? "text-red-600" : "text-emerald-600"} />
       </div>
 
       <section className="rounded-xl border border-neutral-200 bg-white p-5">
         <div className="flex items-center justify-between text-sm">
           <span className="font-medium text-neutral-900">Spending budget</span>
           <span className="text-neutral-500">
-            {spent.toFixed(2)} / {spendingBudget.toFixed(2)}
+            {sym} {spent.toFixed(2)} / {sym} {spendingBudget.toFixed(2)}
           </span>
         </div>
         <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-neutral-100">
@@ -100,7 +104,7 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium text-neutral-900">Savings goal</span>
             <span className="text-neutral-500">
-              {Math.max(0, remaining).toFixed(2)} / {savingsGoal.toFixed(2)}
+              {sym} {Math.max(0, remaining).toFixed(2)} / {sym} {savingsGoal.toFixed(2)}
             </span>
           </div>
           <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-neutral-100">
@@ -122,7 +126,7 @@ export default async function DashboardPage() {
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: c.color }} />
                   {c.name}
                 </span>
-                <span className="text-neutral-700">{c.total.toFixed(2)}</span>
+                <span className="text-neutral-700">{sym} {c.total.toFixed(2)}</span>
               </li>
             ))}
           </ul>
@@ -144,17 +148,19 @@ export default async function DashboardPage() {
 function SummaryCard({
   label,
   value,
+  sym,
   accent,
 }: {
   label: string;
   value: number;
+  sym: string;
   accent?: string;
 }) {
   return (
     <div className="rounded-xl border border-neutral-200 bg-white p-4">
       <p className="text-xs text-neutral-500">{label}</p>
       <p className={`mt-1 text-xl font-semibold ${accent ?? "text-neutral-900"}`}>
-        {value.toFixed(2)}
+        {sym} {value.toFixed(2)}
       </p>
     </div>
   );

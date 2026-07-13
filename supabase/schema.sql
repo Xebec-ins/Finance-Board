@@ -84,6 +84,21 @@ create policy "receipts_update_own" on storage.objects
 create policy "receipts_delete_own" on storage.objects
   for delete using (bucket_id = 'receipts' and (storage.foldername(name))[1] = auth.uid()::text);
 
+-- ── User preferences ────────────────────────────────────────
+create table if not exists user_preferences (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  currency text not null default 'INR'
+);
+
+alter table user_preferences enable row level security;
+
+create policy "prefs_select_own" on user_preferences
+  for select using (auth.uid() = user_id);
+create policy "prefs_insert_own" on user_preferences
+  for insert with check (auth.uid() = user_id);
+create policy "prefs_update_own" on user_preferences
+  for update using (auth.uid() = user_id);
+
 -- ── Seed default categories for a new user ──────────────────
 create or replace function public.handle_new_user()
 returns trigger as $$

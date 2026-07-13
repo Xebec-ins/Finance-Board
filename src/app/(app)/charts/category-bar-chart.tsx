@@ -15,7 +15,7 @@ import { CHART_INK } from "@/lib/chart-theme";
 
 export type CategorySlice = { name: string; color: string; total: number };
 
-export function CategoryBarChart({ data }: { data: CategorySlice[] }) {
+export function CategoryBarChart({ data, sym }: { data: CategorySlice[]; sym: string }) {
   const rows = [...data].sort((a, b) => b.total - a.total).slice(0, 8);
   const height = Math.max(160, rows.length * 40);
 
@@ -30,7 +30,7 @@ export function CategoryBarChart({ data }: { data: CategorySlice[] }) {
   return (
     <div>
       <ResponsiveContainer width="100%" height={height}>
-        <BarChart data={rows} layout="vertical" margin={{ top: 4, right: 40, left: 8, bottom: 4 }}>
+        <BarChart data={rows} layout="vertical" margin={{ top: 4, right: 50, left: 8, bottom: 4 }}>
           <CartesianGrid
             horizontal={false}
             stroke={CHART_INK.gridline}
@@ -51,7 +51,7 @@ export function CategoryBarChart({ data }: { data: CategorySlice[] }) {
             tickLine={false}
           />
           <Tooltip
-            formatter={(value) => Number(value).toFixed(2)}
+            formatter={(value) => `${sym} ${Number(value).toFixed(2)}`}
             contentStyle={{ borderRadius: 8, borderColor: CHART_INK.gridline }}
           />
           <Bar dataKey="total" radius={[0, 4, 4, 0]} maxBarSize={24}>
@@ -61,7 +61,7 @@ export function CategoryBarChart({ data }: { data: CategorySlice[] }) {
             <LabelList
               dataKey="total"
               position="right"
-              formatter={(value: React.ReactNode) => Number(value).toFixed(2)}
+              formatter={(value: React.ReactNode) => `${sym} ${Number(value).toFixed(2)}`}
               style={{ fill: CHART_INK.primary, fontSize: 12 }}
             />
           </Bar>

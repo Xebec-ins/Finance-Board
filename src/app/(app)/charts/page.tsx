@@ -7,6 +7,8 @@ import {
 } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
 import { currentMonthKey, formatMonthLabel, monthKey } from "@/lib/month";
+import { getUserCurrency } from "@/lib/user-prefs";
+import { currencySymbol } from "@/lib/currency";
 import type { MonthlyBudget, TransactionWithCategory } from "@/lib/types";
 import { CategoryBarChart, type CategorySlice } from "./category-bar-chart";
 import { DailySpendChart, type DailySpend } from "./daily-spend-chart";
@@ -22,7 +24,7 @@ export default async function ChartsPage() {
 
   const historyStart = startOfMonth(subMonths(monthStart, MONTHS_OF_HISTORY - 1));
 
-  const [{ data: monthTransactions }, { data: budgets }, { data: historyTransactions }] =
+  const [{ data: monthTransactions }, { data: budgets }, { data: historyTransactions }, currency] =
     await Promise.all([
       supabase
         .from("transactions")
@@ -41,9 +43,11 @@ export default async function ChartsPage() {
         .select("date, amount")
         .gte("date", format(historyStart, "yyyy-MM-dd"))
         .lte("date", format(monthEnd, "yyyy-MM-dd")),
+      getUserCurrency(),
     ]);
 
-  // Spending by category, this month.
+  const sym = currencySymbol(currency);
+
   const byCategory = new Map<string, CategorySlice>();
   for (const t of monthTransactions ?? []) {
     const key = t.category?.name ?? "Uncategorized";
@@ -59,7 +63,6 @@ export default async function ChartsPage() {
     }
   }
 
-  // Daily spend, this month.
   const dailyTotals = new Map<string, number>();
   for (const t of monthTransactions ?? []) {
     dailyTotals.set(t.date, (dailyTotals.get(t.date) ?? 0) + t.amount);
@@ -71,7 +74,6 @@ export default async function ChartsPage() {
     },
   );
 
-  // Savings progress, last N months.
   const budgetByMonth = new Map(budgets?.map((b) => [b.month, b]) ?? []);
   const spendByMonth = new Map<string, number>();
   for (const t of historyTransactions ?? []) {
@@ -97,14 +99,14 @@ export default async function ChartsPage() {
       <section className="rounded-xl border border-neutral-200 bg-white p-5">
         <h2 className="text-sm font-semibold text-neutral-900">Spending by category</h2>
         <div className="mt-4">
-          <CategoryBarChart data={[...byCategory.values()]} />
+          <CategoryBarChart data={[...byCategory.values()]} sym={sym} />
         </div>
       </section>
 
       <section className="rounded-xl border border-neutral-200 bg-white p-5">
         <h2 className="text-sm font-semibold text-neutral-900">Daily spending</h2>
         <div className="mt-4">
-          <DailySpendChart data={dailySpend} />
+          <DailySpendChart data={dailySpend} sym={sym} />
         </div>
       </section>
 
@@ -113,7 +115,7 @@ export default async function ChartsPage() {
           Savings progress ({MONTHS_OF_HISTORY} months)
         </h2>
         <div className="mt-4">
-          <SavingsProgressChart data={savingsProgress} />
+          <SavingsProgressChart data={savingsProgress} sym={sym} />
         </div>
       </section>
     </div>

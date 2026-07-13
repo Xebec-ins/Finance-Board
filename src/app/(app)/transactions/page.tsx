@@ -2,6 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { deleteTransaction } from "@/app/actions/transactions";
 import { currentMonthKey, formatMonthLabel } from "@/lib/month";
+import { getUserCurrency } from "@/lib/user-prefs";
+import { currencySymbol } from "@/lib/currency";
 import type { TransactionWithCategory } from "@/lib/types";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 
@@ -17,14 +19,18 @@ export default async function TransactionsPage({
   const rangeStart = format(startOfMonth(new Date(month)), "yyyy-MM-dd");
   const rangeEnd = format(endOfMonth(new Date(month)), "yyyy-MM-dd");
 
-  const { data: transactions } = await supabase
-    .from("transactions")
-    .select("*, category:categories(*)")
-    .gte("date", rangeStart)
-    .lte("date", rangeEnd)
-    .order("date", { ascending: false })
-    .returns<TransactionWithCategory[]>();
+  const [{ data: transactions }, currency] = await Promise.all([
+    supabase
+      .from("transactions")
+      .select("*, category:categories(*)")
+      .gte("date", rangeStart)
+      .lte("date", rangeEnd)
+      .order("date", { ascending: false })
+      .returns<TransactionWithCategory[]>(),
+    getUserCurrency(),
+  ]);
 
+  const sym = currencySymbol(currency);
   const total = (transactions ?? []).reduce((sum, t) => sum + t.amount, 0);
 
   return (
@@ -35,7 +41,7 @@ export default async function TransactionsPage({
             Transactions
           </h1>
           <p className="text-sm text-neutral-500">
-            {formatMonthLabel(month)} · {total.toFixed(2)} spent
+            {formatMonthLabel(month)} · {sym} {total.toFixed(2)} spent
           </p>
         </div>
         <Link
@@ -72,7 +78,7 @@ export default async function TransactionsPage({
             </div>
             <div className="flex items-center gap-3">
               <span className="text-sm font-semibold text-neutral-900">
-                {t.amount.toFixed(2)}
+                {sym} {t.amount.toFixed(2)}
               </span>
               <Link
                 href={`/transactions/${t.id}/edit`}

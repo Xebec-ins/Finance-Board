@@ -15,7 +15,7 @@ import { CATEGORICAL_PALETTE_LIGHT } from "@/lib/palette";
 
 export type SavingsMonth = { month: string; remaining: number; goal: number };
 
-export function SavingsProgressChart({ data }: { data: SavingsMonth[] }) {
+export function SavingsProgressChart({ data, sym }: { data: SavingsMonth[]; sym: string }) {
   const hasData = data.some((d) => d.goal > 0 || d.remaining !== 0);
   if (!hasData) {
     return (
@@ -42,7 +42,7 @@ export function SavingsProgressChart({ data }: { data: SavingsMonth[] }) {
           width={40}
         />
         <Tooltip
-          formatter={(value) => Number(value).toFixed(2)}
+          formatter={(value) => `${sym} ${Number(value).toFixed(2)}`}
           contentStyle={{ borderRadius: 8, borderColor: CHART_INK.gridline }}
         />
         <Legend
