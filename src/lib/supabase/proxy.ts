@@ -27,19 +27,22 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  // Use getSession() for fast cookie-only check (no network round-trip).
+  // Actual auth validation happens via getUser() in page components; RLS
+  // enforces data security regardless.
+  const { data: { session } } = await supabase.auth.getSession();
 
   const isPublicPath = PUBLIC_PATHS.some((path) =>
     request.nextUrl.pathname.startsWith(path),
   );
 
-  if (!user && !isPublicPath) {
+  if (!session && !isPublicPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  if (user && isPublicPath) {
+  if (session && isPublicPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
