@@ -1,28 +1,23 @@
 "use client";
 
 import { useActionState } from "react";
-import { updateTransaction } from "@/app/actions/transactions";
-import type { Category, Transaction } from "@/lib/types";
+import { createRecurring } from "@/app/actions/recurring";
+import type { Category } from "@/lib/types";
 
-export function EditTransactionForm({
-  transaction,
-  categories,
-}: {
-  transaction: Transaction;
-  categories: Category[];
-}) {
+export function RecurringForm({ categories }: { categories: Category[] }) {
   const [result, formAction, isPending] = useActionState(
-    updateTransaction,
+    createRecurring,
     undefined,
   );
 
   return (
-    <form action={formAction} className="space-y-4">
-      <input type="hidden" name="id" value={transaction.id} />
-
+    <form action={formAction} className="mt-4 space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="amount" className="block text-sm font-medium text-neutral-700">
+          <label
+            htmlFor="amount"
+            className="block text-sm font-medium text-neutral-700"
+          >
             Amount
           </label>
           <input
@@ -32,21 +27,23 @@ export function EditTransactionForm({
             step="0.01"
             min="0"
             required
-            defaultValue={transaction.amount}
             className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
           />
         </div>
 
         <div>
-          <label htmlFor="category_id" className="block text-sm font-medium text-neutral-700">
+          <label
+            htmlFor="category_id"
+            className="block text-sm font-medium text-neutral-700"
+          >
             Category
           </label>
           <select
             id="category_id"
             name="category_id"
-            defaultValue={transaction.category_id ?? ""}
             className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
           >
+            <option value="">None</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -56,59 +53,52 @@ export function EditTransactionForm({
         </div>
 
         <div>
-          <label htmlFor="date" className="block text-sm font-medium text-neutral-700">
-            Date
-          </label>
-          <input
-            id="date"
-            name="date"
-            type="date"
-            required
-            defaultValue={transaction.date}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="merchant" className="block text-sm font-medium text-neutral-700">
+          <label
+            htmlFor="merchant"
+            className="block text-sm font-medium text-neutral-700"
+          >
             Merchant
           </label>
           <input
             id="merchant"
             name="merchant"
             type="text"
-            defaultValue={transaction.merchant ?? ""}
             className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
           />
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="note" className="block text-sm font-medium text-neutral-700">
+          <label
+            htmlFor="note"
+            className="block text-sm font-medium text-neutral-700"
+          >
             Note
           </label>
           <input
             id="note"
             name="note"
             type="text"
-            defaultValue={transaction.note ?? ""}
             className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
           />
         </div>
+
         <div>
-          <label htmlFor="tags" className="block text-sm font-medium text-neutral-700">
-            Tags
+          <label
+            htmlFor="day_of_month"
+            className="block text-sm font-medium text-neutral-700"
+          >
+            Day of month
           </label>
           <input
-            id="tags"
-            name="tags"
-            type="text"
-            defaultValue={(transaction.tags ?? []).join(", ")}
-            placeholder="e.g. urgent, work, personal"
+            id="day_of_month"
+            name="day_of_month"
+            type="number"
+            min="1"
+            max="28"
+            required
+            placeholder="1–28"
             className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
           />
-          <p className="mt-1 text-xs text-neutral-400">Comma-separated</p>
         </div>
       </div>
 
@@ -119,7 +109,7 @@ export function EditTransactionForm({
         disabled={isPending}
         className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-60"
       >
-        {isPending ? "Saving…" : "Save changes"}
+        {isPending ? "Saving..." : "Add recurring bill"}
       </button>
     </form>
   );

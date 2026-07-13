@@ -19,6 +19,7 @@ export function TransactionForm({ categories }: { categories: Category[] }) {
   const [amount, setAmount] = useState("");
   const [merchant, setMerchant] = useState("");
   const [note, setNote] = useState("");
+  const [tagsInput, setTagsInput] = useState("");
   const [date, setDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
 
@@ -95,6 +96,7 @@ export function TransactionForm({ categories }: { categories: Category[] }) {
         }
       }
 
+      const tags = tagsInput.split(",").map((t) => t.trim()).filter(Boolean);
       const { error: insertError } = await supabase.from("transactions").insert({
         user_id: userData.user.id,
         amount: parsedAmount,
@@ -104,6 +106,7 @@ export function TransactionForm({ categories }: { categories: Category[] }) {
         date,
         receipt_path: receiptPath,
         source: photoFile ? "ocr" : "manual",
+        tags,
       });
 
       if (insertError) {
@@ -227,17 +230,33 @@ export function TransactionForm({ categories }: { categories: Category[] }) {
         </div>
       </div>
 
-      <div>
-        <label htmlFor="note" className="block text-sm font-medium text-neutral-700">
-          Note
-        </label>
-        <input
-          id="note"
-          type="text"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
-        />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="note" className="block text-sm font-medium text-neutral-700">
+            Note
+          </label>
+          <input
+            id="note"
+            type="text"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
+          />
+        </div>
+        <div>
+          <label htmlFor="tags" className="block text-sm font-medium text-neutral-700">
+            Tags
+          </label>
+          <input
+            id="tags"
+            type="text"
+            value={tagsInput}
+            onChange={(e) => setTagsInput(e.target.value)}
+            placeholder="e.g. urgent, work, personal"
+            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
+          />
+          <p className="mt-1 text-xs text-neutral-400">Comma-separated</p>
+        </div>
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}

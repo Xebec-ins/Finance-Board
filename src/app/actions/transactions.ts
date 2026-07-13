@@ -16,6 +16,8 @@ export async function updateTransaction(
   const merchant = String(formData.get("merchant") ?? "").trim() || null;
   const note = String(formData.get("note") ?? "").trim() || null;
   const date = String(formData.get("date") ?? "");
+  const tagsRaw = String(formData.get("tags") ?? "").trim();
+  const tags = tagsRaw ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean) : [];
 
   if (!id || !date || Number.isNaN(amount) || amount <= 0) {
     return { error: "Please fill in a valid amount and date." };
@@ -24,7 +26,7 @@ export async function updateTransaction(
   const supabase = await createClient();
   const { error } = await supabase
     .from("transactions")
-    .update({ amount, category_id: categoryId, merchant, note, date })
+    .update({ amount, category_id: categoryId, merchant, note, date, tags })
     .eq("id", id);
 
   if (error) {
