@@ -1,8 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { useActionState } from "react";
 import { saveMonthlyBudget } from "@/app/actions/budgets";
 import type { MonthlyBudget } from "@/lib/types";
+
+function derivePercentage(budget: MonthlyBudget | null): string {
+  if (!budget || !budget.income_amount) return "";
+  return String(
+    Math.round((budget.savings_goal_amount / budget.income_amount) * 100),
+  );
+}
 
 export function BudgetForm({
   month,
@@ -16,9 +24,19 @@ export function BudgetForm({
     undefined,
   );
 
+  const [incomeAmount, setIncomeAmount] = useState(
+    budget?.income_amount ? String(budget.income_amount) : "",
+  );
+  const [savingsPct, setSavingsPct] = useState(derivePercentage(budget));
+
+  const income = Number(incomeAmount) || 0;
+  const pct = Number(savingsPct) || 0;
+  const derivedSavings = Math.round(income * (pct / 100) * 100) / 100;
+
   return (
     <form action={formAction} className="mt-4 space-y-4">
       <input type="hidden" name="month" value={month} />
+      <input type="hidden" name="savings_goal_amount" value={derivedSavings} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
@@ -35,28 +53,36 @@ export function BudgetForm({
             step="0.01"
             min="0"
             required
-            defaultValue={budget?.income_amount ?? ""}
+            value={incomeAmount}
+            onChange={(e) => setIncomeAmount(e.target.value)}
             className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
           />
         </div>
 
         <div>
           <label
-            htmlFor="savings_goal_amount"
+            htmlFor="savings_pct"
             className="block text-sm font-medium text-neutral-700"
           >
-            Savings goal
+            Savings goal (%)
           </label>
           <input
-            id="savings_goal_amount"
-            name="savings_goal_amount"
+            id="savings_pct"
             type="number"
-            step="0.01"
+            step="1"
             min="0"
+            max="100"
             required
-            defaultValue={budget?.savings_goal_amount ?? ""}
+            value={savingsPct}
+            onChange={(e) => setSavingsPct(e.target.value)}
+            placeholder="e.g. 20"
             className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
           />
+          {income > 0 && pct > 0 && (
+            <p className="mt-1 text-xs text-neutral-500">
+              {pct}% of {income.toFixed(2)} = {derivedSavings.toFixed(2)}
+            </p>
+          )}
         </div>
       </div>
 
