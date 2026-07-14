@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 
 export type BudgetFormResult = { error: string } | undefined;
 
@@ -20,15 +20,13 @@ export async function saveMonthlyBudget(
     return { error: "Amounts can't be negative." };
   }
 
-  const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) {
-    return { error: "Not signed in." };
-  }
+  const user = await getUser();
+  if (!user) return { error: "Not signed in." };
 
+  const supabase = await createClient();
   const { error } = await supabase.from("monthly_budgets").upsert(
     {
-      user_id: userData.user.id,
+      user_id: user.id,
       month,
       income_amount: incomeAmount,
       savings_goal_amount: savingsGoalAmount,

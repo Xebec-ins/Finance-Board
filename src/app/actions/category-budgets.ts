@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 
 export type CatBudgetResult = { error: string } | undefined;
 
@@ -17,21 +17,21 @@ export async function saveCategoryBudget(
     return { error: "Enter a valid amount." };
   }
 
-  const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return { error: "Not signed in." };
+  const user = await getUser();
+  if (!user) return { error: "Not signed in." };
 
+  const supabase = await createClient();
   if (amount === 0) {
     await supabase
       .from("category_budgets")
       .delete()
-      .eq("user_id", userData.user.id)
+      .eq("user_id", user.id)
       .eq("category_id", categoryId)
       .eq("month", month);
   } else {
     const { error } = await supabase.from("category_budgets").upsert(
       {
-        user_id: userData.user.id,
+        user_id: user.id,
         category_id: categoryId,
         month,
         amount,

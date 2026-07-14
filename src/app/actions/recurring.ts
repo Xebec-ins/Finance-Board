@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import { currentMonthKey } from "@/lib/month";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 
@@ -24,12 +24,12 @@ export async function createRecurring(
     return { error: "Day must be between 1 and 28." };
   }
 
-  const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return { error: "Not signed in." };
+  const user = await getUser();
+  if (!user) return { error: "Not signed in." };
 
+  const supabase = await createClient();
   const { error } = await supabase.from("recurring_templates").insert({
-    user_id: userData.user.id,
+    user_id: user.id,
     amount,
     category_id: categoryId,
     merchant,
@@ -65,9 +65,10 @@ export async function toggleRecurring(formData: FormData) {
 }
 
 export async function applyRecurringForMonth(): Promise<void> {
+  const user = await getUser();
+  if (!user) return;
+
   const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return;
 
   const month = currentMonthKey();
   const rangeStart = format(startOfMonth(new Date(month)), "yyyy-MM-dd");
@@ -97,7 +98,7 @@ export async function applyRecurringForMonth(): Promise<void> {
       const day = String(t.day_of_month).padStart(2, "0");
       const dateStr = `${month.slice(0, 7)}-${day}`;
       return {
-        user_id: userData.user!.id,
+        user_id: user.id,
         amount: t.amount,
         category_id: t.category_id,
         merchant: t.merchant,

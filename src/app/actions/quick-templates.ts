@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import { format } from "date-fns";
 
 export type QuickTemplateResult = { error: string } | undefined;
@@ -18,12 +18,12 @@ export async function createQuickTemplate(
   if (!label) return { error: "Label is required." };
   if (Number.isNaN(amount) || amount <= 0) return { error: "Enter a valid amount." };
 
-  const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return { error: "Not signed in." };
+  const user = await getUser();
+  if (!user) return { error: "Not signed in." };
 
+  const supabase = await createClient();
   const { error } = await supabase.from("quick_templates").insert({
-    user_id: userData.user.id,
+    user_id: user.id,
     label,
     amount,
     category_id: categoryId,
@@ -46,10 +46,10 @@ export async function useQuickTemplate(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
 
-  const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return;
+  const user = await getUser();
+  if (!user) return;
 
+  const supabase = await createClient();
   const { data: template } = await supabase
     .from("quick_templates")
     .select("*")
@@ -59,7 +59,7 @@ export async function useQuickTemplate(formData: FormData) {
   if (!template) return;
 
   await supabase.from("transactions").insert({
-    user_id: userData.user.id,
+    user_id: user.id,
     amount: template.amount,
     category_id: template.category_id,
     merchant: template.merchant,
