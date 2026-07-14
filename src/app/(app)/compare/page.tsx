@@ -4,12 +4,18 @@ import { currentMonthKey, monthKey, formatMonthLabel } from "@/lib/month";
 import { getUserCurrency } from "@/lib/user-prefs";
 import { currencySymbol } from "@/lib/currency";
 import type { MonthlyBudget, TransactionWithCategory } from "@/lib/types";
+import { MonthNav } from "@/components/month-nav";
 
 type CategoryTotal = { color: string; total: number };
 
-export default async function ComparePage() {
+export default async function ComparePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string }>;
+}) {
+  const { month: monthParam } = await searchParams;
   const supabase = await createClient();
-  const month = currentMonthKey();
+  const month = monthParam || currentMonthKey();
   const lastMonth = monthKey(subMonths(new Date(month), 1));
 
   const thisStart = format(startOfMonth(new Date(month)), "yyyy-MM-dd");
@@ -110,11 +116,14 @@ export default async function ComparePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-lg font-semibold text-neutral-900">Monthly Comparison</h1>
-        <p className="text-sm text-neutral-500">
-          {formatMonthLabel(month)} vs {formatMonthLabel(lastMonth)}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold text-neutral-900">Monthly Comparison</h1>
+          <p className="text-sm text-neutral-500">
+            vs {formatMonthLabel(lastMonth)}
+          </p>
+        </div>
+        <MonthNav month={month} />
       </div>
 
       {!hasLastMonth ? (

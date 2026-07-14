@@ -5,10 +5,16 @@ import { currentMonthKey, formatMonthLabel, monthKey } from "@/lib/month";
 import { getUserCurrency } from "@/lib/user-prefs";
 import { currencySymbol, type CurrencyCode } from "@/lib/currency";
 import type { MonthlyBudget, TransactionWithCategory, CategoryBudget } from "@/lib/types";
+import { MonthNav } from "@/components/month-nav";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string }>;
+}) {
+  const { month: monthParam } = await searchParams;
   const supabase = await createClient();
-  const month = currentMonthKey();
+  const month = monthParam || currentMonthKey();
   const rangeStart = format(startOfMonth(new Date(month)), "yyyy-MM-dd");
   const rangeEnd = format(endOfMonth(new Date(month)), "yyyy-MM-dd");
 
@@ -139,28 +145,34 @@ export default async function DashboardPage() {
 
   if (!budget) {
     return (
-      <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-8 text-center">
-        <h1 className="text-lg font-semibold text-neutral-900">
-          Set your budget for {formatMonthLabel(month)}
-        </h1>
-        <p className="mt-2 text-sm text-neutral-500">
-          Tell us how much you have to spend and how much you want to save.
-        </p>
-        <Link
-          href="/settings"
-          className="mt-4 inline-block rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
-        >
-          Go to settings
-        </Link>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-semibold text-neutral-900">Dashboard</h1>
+          <MonthNav month={month} />
+        </div>
+        <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-8 text-center">
+          <h2 className="text-lg font-semibold text-neutral-900">
+            Set your budget for {formatMonthLabel(month)}
+          </h2>
+          <p className="mt-2 text-sm text-neutral-500">
+            Tell us how much you have to spend and how much you want to save.
+          </p>
+          <Link
+            href={`/settings?month=${month}`}
+            className="mt-4 inline-block rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+          >
+            Go to settings
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold text-neutral-900">Dashboard</h1>
-        <p className="text-sm text-neutral-500">{formatMonthLabel(month)}</p>
+        <MonthNav month={month} />
       </div>
 
       {/* Budget Alerts */}

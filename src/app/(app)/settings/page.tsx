@@ -8,10 +8,16 @@ import { CategoryManager } from "./category-manager";
 import { CurrencyForm } from "./currency-form";
 import { CategoryBudgets } from "./category-budgets";
 import { QuickTemplateManager } from "./quick-templates";
+import { MonthNav } from "@/components/month-nav";
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string }>;
+}) {
+  const { month: monthParam } = await searchParams;
   const supabase = await createClient();
-  const month = currentMonthKey();
+  const month = monthParam || currentMonthKey();
 
   const [
     { data: budget },
@@ -47,9 +53,9 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
+      <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold text-neutral-900">Settings</h1>
-        <p className="text-sm text-neutral-500">{formatMonthLabel(month)}</p>
+        <MonthNav month={month} />
       </div>
 
       <section className="rounded-xl border border-neutral-200 bg-white p-5">

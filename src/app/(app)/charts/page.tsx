@@ -13,12 +13,18 @@ import type { MonthlyBudget, TransactionWithCategory } from "@/lib/types";
 import { CategoryBarChart, type CategorySlice } from "./category-bar-chart";
 import { DailySpendChart, type DailySpend } from "./daily-spend-chart";
 import { SavingsProgressChart, type SavingsMonth } from "./savings-progress-chart";
+import { MonthNav } from "@/components/month-nav";
 
 const MONTHS_OF_HISTORY = 6;
 
-export default async function ChartsPage() {
+export default async function ChartsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string }>;
+}) {
+  const { month: monthParam } = await searchParams;
   const supabase = await createClient();
-  const month = currentMonthKey();
+  const month = monthParam || currentMonthKey();
   const monthStart = startOfMonth(new Date(month));
   const monthEnd = endOfMonth(new Date(month));
 
@@ -91,9 +97,9 @@ export default async function ChartsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold text-neutral-900">Charts</h1>
-        <p className="text-sm text-neutral-500">{formatMonthLabel(month)}</p>
+        <MonthNav month={month} />
       </div>
 
       <section className="rounded-xl border border-neutral-200 bg-white p-5">

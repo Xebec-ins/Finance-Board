@@ -7,6 +7,7 @@ import { currencySymbol } from "@/lib/currency";
 import type { TransactionWithCategory } from "@/lib/types";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { ExportButton } from "./export-button";
+import { MonthNav } from "@/components/month-nav";
 
 export default async function TransactionsPage({
   searchParams,
@@ -64,7 +65,7 @@ export default async function TransactionsPage({
             Transactions
           </h1>
           <p className="text-sm text-neutral-500">
-            {monthLabel} · {sym} {total.toFixed(2)} spent
+            {sym} {total.toFixed(2)} spent
             {filtered.length !== (transactions ?? []).length
               ? ` (${filtered.length} of ${(transactions ?? []).length})`
               : ""}
@@ -80,6 +81,8 @@ export default async function TransactionsPage({
           </Link>
         </div>
       </div>
+
+      <MonthNav month={month} />
 
       {/* Search bar */}
       <form className="flex gap-2">
